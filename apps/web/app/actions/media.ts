@@ -1,0 +1,56 @@
+"use server";
+
+import { prisma } from "database";
+import type { MediaType } from "database";
+import { searchAniList, type NormalizedMedia } from "@/lib/anilist";
+import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
+
+// TEMP: no auth yet — every write attributes to this seeded user.
+// Replace once an auth phase is built. See ADR-0004.
+const DEMO_USER_ID = 1;
+
+export async function searchMedia(
+  query: string,
+  category: Exclude<MediaType, "MOVIE">,
+): Promise<NormalizedMedia[]> {
+  if (!query.trim()) return [];
+  const { type, country } = CATEGORY_TO_ANILIST[category];
+  return searchAniList(query, type, country);
+}
+
+export async function addToLibrary(
+  category: MediaType,
+  result: NormalizedMedia,
+) {
+  const media = await prisma.media.upsert({
+    where: {
+      externalSource_externalId: {
+        externalSource: "ANILIST",
+        externalId: result.externalId,
+      },
+    },
+    update: {},
+    create: {
+      type: category,
+      externalSource: "ANILIST",
+      externalId: result.externalId,
+      title: result.title,
+      coverImageUrl: result.coverImageUrl,
+      synopsis: result.synopsis,
+      releaseYear: result.releaseYear,
+      totalEpisodes: result.totalEpisodes,
+      totalChapters: result.totalChapters,
+      genres: result.genres,
+    },
+  });
+
+  await prisma.libraryEntry.upsert({
+    where: {
+      userId_mediaId: { userId: DEMO_USER_ID, mediaId: media.id },
+    },
+    update: {},
+    create: { userId: DEMO_USER_ID, mediaId: media.id },
+  });
+
+  return media;
+}
