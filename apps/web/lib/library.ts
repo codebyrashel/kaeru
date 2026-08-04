@@ -30,3 +30,10 @@ export async function getLibraryExternalIds(type: MediaType): Promise<Set<string
   });
   return new Set(entries.map((e) => e.media.externalId));
 }
+
+export async function getLibraryEntryByMediaId(mediaId: number) {
+  return prisma.libraryEntry.findFirst({
+    where: { userId: DEMO_USER_ID, mediaId },
+    include: { media: true },
+  });
+}
