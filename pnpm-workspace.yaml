@@ -1,6 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
 catalogs:
   prisma:
     prisma: latest
