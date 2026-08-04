@@ -5,35 +5,49 @@ import { Search } from "lucide-react";
 import { CategoryTabs } from "@/components/category-tabs";
 import { DiscoveryCard } from "@/components/discovery-card";
 import { getDiscoveryMedia, searchMedia, addToLibrary } from "@/app/actions/media";
-import type { NormalizedMedia, AniListSort } from "@/lib/anilist";
+import { getMovieDiscovery, searchMovies } from "@/app/actions/movies";
+import type { NormalizedMedia } from "@/lib/media-types";
+import type { AniListSort } from "@/lib/anilist";
+import type { TmdbSort } from "@/lib/tmdb";
 import type { MediaType } from "database";
 import type { CategorySlug } from "@/lib/category-routes";
 
-type SortOption = Extract<AniListSort, "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC">;
-
-const SORT_LABELS: Record<SortOption, string> = {
-  TRENDING_DESC: "Trending",
-  POPULARITY_DESC: "Popular",
-  SCORE_DESC: "Top rated",
-};
+export interface SortOption {
+  value: string;
+  label: string;
+}
 
 export function DiscoveryGrid({
   category,
   slug,
+  source,
+  sortOptions,
   initialResults,
   initialAddedIds,
 }: {
-  category: Exclude<MediaType, "MOVIE">;
+  category: MediaType;
   slug: CategorySlug;
+  source: "anilist" | "tmdb";
+  sortOptions: SortOption[];
   initialResults: NormalizedMedia[];
   initialAddedIds: string[];
 }) {
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortOption>("TRENDING_DESC");
+  const [sort, setSort] = useState(sortOptions[0]?.value ?? "");
   const [results, setResults] = useState<NormalizedMedia[]>(initialResults);
   const [addedIds, setAddedIds] = useState(new Set(initialAddedIds));
   const [isPending, startTransition] = useTransition();
   const isFirstRun = useRef(true);
+
+  async function fetchResults(): Promise<NormalizedMedia[]> {
+    if (source === "anilist") {
+      const anilistCategory = category as Exclude<MediaType, "MOVIE">;
+      return query.trim()
+        ? searchMedia(query, anilistCategory)
+        : getDiscoveryMedia(anilistCategory, sort as AniListSort);
+    }
+    return query.trim() ? searchMovies(query) : getMovieDiscovery(sort as TmdbSort);
+  }
 
   useEffect(() => {
     if (isFirstRun.current) {
@@ -41,10 +55,7 @@ export function DiscoveryGrid({
       return;
     }
     startTransition(async () => {
-      const data = query.trim()
-        ? await searchMedia(query, category)
-        : await getDiscoveryMedia(category, sort);
-      setResults(data);
+      setResults(await fetchResults());
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort]);
@@ -52,10 +63,7 @@ export function DiscoveryGrid({
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const data = query.trim()
-        ? await searchMedia(query, category)
-        : await getDiscoveryMedia(category, sort);
-      setResults(data);
+      setResults(await fetchResults());
     });
   }
 
@@ -74,24 +82,24 @@ export function DiscoveryGrid({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Search ${SORT_LABELS[sort].toLowerCase() === sort ? "" : ""}${category.toLowerCase()}`}
+            placeholder={`Search ${category.toLowerCase()}`}
             className="w-full bg-transparent text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none"
           />
         </div>
         {!query.trim() && (
           <div className="flex gap-1">
-            {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
+            {sortOptions.map((s) => (
               <button
-                key={s}
+                key={s.value}
                 type="button"
-                onClick={() => setSort(s)}
+                onClick={() => setSort(s.value)}
                 className={`whitespace-nowrap rounded px-3 py-2 text-xs ${
-                  sort === s
+                  sort === s.value
                     ? "bg-surface-2 text-text-primary"
                     : "text-text-secondary hover:bg-surface-1"
                 }`}
               >
-                {SORT_LABELS[s]}
+                {s.label}
               </button>
             ))}
           </div>

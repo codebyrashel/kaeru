@@ -1,3 +1,5 @@
+import type { NormalizedMedia } from "./media-types";
+
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
 
 const MEDIA_QUERY = `
@@ -34,17 +36,7 @@ export type AniListType = "ANIME" | "MANGA";
 export type AniListCountry = "JP" | "KR" | "CN";
 export type AniListSort = "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC" | "SEARCH_MATCH";
 
-export interface NormalizedMedia {
-  externalId: string;
-  title: string;
-  coverImageUrl: string | null;
-  synopsis: string | null;
-  releaseYear: number | null;
-  totalEpisodes: number | null;
-  totalChapters: number | null;
-  genres: string[];
-  averageScore: number | null;
-}
+export type { NormalizedMedia } from "./media-types";
 
 interface AniListApiMedia {
   id: number;

@@ -63,18 +63,20 @@ export default async function TitleDetailPage({
         </div>
       </div>
 
-      <div className="max-w-sm rounded-[10px] bg-surface-1 p-4">
-        <p className="mb-3 text-sm text-text-secondary">
-          {isChapterBased ? "Chapter progress" : "Episode progress"}
-        </p>
-        <ProgressStepper
-          entryId={entry.id}
-          current={(isChapterBased ? entry.currentChapter : entry.currentEpisode) ?? 0}
-          total={isChapterBased ? media.totalChapters : media.totalEpisodes}
-          field={isChapterBased ? "currentChapter" : "currentEpisode"}
-          unitLabel={isChapterBased ? "ch" : "ep"}
-        />
-      </div>
+      {media.type !== "MOVIE" && (
+        <div className="max-w-sm rounded-[10px] bg-surface-1 p-4">
+          <p className="mb-3 text-sm text-text-secondary">
+            {isChapterBased ? "Chapter progress" : "Episode progress"}
+          </p>
+          <ProgressStepper
+            entryId={entry.id}
+            current={(isChapterBased ? entry.currentChapter : entry.currentEpisode) ?? 0}
+            total={isChapterBased ? media.totalChapters : media.totalEpisodes}
+            field={isChapterBased ? "currentChapter" : "currentEpisode"}
+            unitLabel={isChapterBased ? "ch" : "ep"}
+          />
+        </div>
+      )}
     </div>
   );
 }
