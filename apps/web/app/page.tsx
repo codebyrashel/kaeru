@@ -1,5 +1,6 @@
 import { getUserLibrary } from "@/lib/library";
 import { LibraryCard } from "@/components/library-card";
+import Link from "next/link";
 
 export default async function Home() {
   const entries = await getUserLibrary();
@@ -11,9 +12,9 @@ export default async function Home() {
       {entries.length === 0 ? (
         <p className="text-sm text-text-muted">
           Nothing here yet.{" "}
-          <a href="/dev-search" className="text-accent-text underline">
+          <Link href="/dev-search" className="text-accent-text underline">
             Search AniList
-          </a>{" "}
+          </Link>{" "}
           to add something.
         </p>
       ) : (

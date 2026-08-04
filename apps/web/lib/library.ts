@@ -1,4 +1,4 @@
-import { prisma } from "database";
+import { prisma, MediaType } from "database";
 
 // TEMP: matches DEMO_USER_ID in app/actions/media.ts. See ADR-0004.
 const DEMO_USER_ID = 1;
@@ -20,4 +20,13 @@ export function progressPercent(entry: {
   const total = entry.media.totalEpisodes ?? entry.media.totalChapters ?? null;
   if (!total || total === 0) return null;
   return Math.min(100, Math.round((current / total) * 100));
+}
+
+
+export async function getLibraryExternalIds(type: MediaType): Promise<Set<string>> {
+  const entries = await prisma.libraryEntry.findMany({
+    where: { userId: DEMO_USER_ID, media: { type } },
+    select: { media: { select: { externalId: true } } },
+  });
+  return new Set(entries.map((e) => e.media.externalId));
 }

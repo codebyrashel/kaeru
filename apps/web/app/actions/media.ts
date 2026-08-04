@@ -2,7 +2,7 @@
 
 import { prisma } from "database";
 import type { MediaType } from "database";
-import { searchAniList, type NormalizedMedia } from "@/lib/anilist";
+import { fetchAniListMedia, type NormalizedMedia, type AniListSort } from "@/lib/anilist";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
 
 // TEMP: no auth yet — every write attributes to this seeded user.
@@ -15,13 +15,18 @@ export async function searchMedia(
 ): Promise<NormalizedMedia[]> {
   if (!query.trim()) return [];
   const { type, country } = CATEGORY_TO_ANILIST[category];
-  return searchAniList(query, type, country);
+  return fetchAniListMedia({ search: query, type, countryOfOrigin: country });
 }
 
-export async function addToLibrary(
-  category: MediaType,
-  result: NormalizedMedia,
-) {
+export async function getDiscoveryMedia(
+  category: Exclude<MediaType, "MOVIE">,
+  sort: AniListSort,
+): Promise<NormalizedMedia[]> {
+  const { type, country } = CATEGORY_TO_ANILIST[category];
+  return fetchAniListMedia({ type, countryOfOrigin: country, sort });
+}
+
+export async function addToLibrary(category: MediaType, result: NormalizedMedia) {
   const media = await prisma.media.upsert({
     where: {
       externalSource_externalId: {
@@ -45,9 +50,7 @@ export async function addToLibrary(
   });
 
   await prisma.libraryEntry.upsert({
-    where: {
-      userId_mediaId: { userId: DEMO_USER_ID, mediaId: media.id },
-    },
+    where: { userId_mediaId: { userId: DEMO_USER_ID, mediaId: media.id } },
     update: {},
     create: { userId: DEMO_USER_ID, mediaId: media.id },
   });

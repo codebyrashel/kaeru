@@ -1,13 +1,13 @@
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
 
-const SEARCH_QUERY = `
-  query ($search: String, $type: MediaType, $countryOfOrigin: CountryCode) {
-    Page(page: 1, perPage: 12) {
+const MEDIA_QUERY = `
+  query ($search: String, $type: MediaType, $countryOfOrigin: CountryCode, $sort: [MediaSort]) {
+    Page(page: 1, perPage: 15) {
       media(
         search: $search
         type: $type
         countryOfOrigin: $countryOfOrigin
-        sort: SEARCH_MATCH
+        sort: $sort
       ) {
         id
         title {
@@ -24,6 +24,7 @@ const SEARCH_QUERY = `
         episodes
         chapters
         genres
+        averageScore
       }
     }
   }
@@ -31,6 +32,7 @@ const SEARCH_QUERY = `
 
 export type AniListType = "ANIME" | "MANGA";
 export type AniListCountry = "JP" | "KR" | "CN";
+export type AniListSort = "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC" | "SEARCH_MATCH";
 
 export interface NormalizedMedia {
   externalId: string;
@@ -41,40 +43,55 @@ export interface NormalizedMedia {
   totalEpisodes: number | null;
   totalChapters: number | null;
   genres: string[];
+  averageScore: number | null;
+}
+
+interface AniListApiMedia {
+  id: number;
+  title: { romaji: string | null; english: string | null };
+  coverImage: { large: string | null };
+  description: string | null;
+  startDate: { year: number | null };
+  episodes: number | null;
+  chapters: number | null;
+  genres: string[];
+  averageScore: number | null;
 }
 
 interface AniListResponse {
-  data?: {
-    Page: {
-      media: Array<{
-        id: number;
-        title: { romaji: string | null; english: string | null };
-        coverImage: { large: string | null };
-        description: string | null;
-        startDate: { year: number | null };
-        episodes: number | null;
-        chapters: number | null;
-        genres: string[];
-      }>;
-    };
-  };
+  data?: { Page: { media: AniListApiMedia[] } };
   errors?: Array<{ message: string }>;
 }
 
-export async function searchAniList(
-  query: string,
-  type: AniListType,
-  countryOfOrigin?: AniListCountry,
-): Promise<NormalizedMedia[]> {
+function normalize(m: AniListApiMedia): NormalizedMedia {
+  return {
+    externalId: String(m.id),
+    title: m.title.english ?? m.title.romaji ?? "Untitled",
+    coverImageUrl: m.coverImage.large,
+    synopsis: m.description,
+    releaseYear: m.startDate.year,
+    totalEpisodes: m.episodes,
+    totalChapters: m.chapters,
+    genres: m.genres ?? [],
+    averageScore: m.averageScore,
+  };
+}
+
+export async function fetchAniListMedia(params: {
+  search?: string;
+  type: AniListType;
+  countryOfOrigin?: AniListCountry;
+  sort?: AniListSort;
+}): Promise<NormalizedMedia[]> {
+  const { search, type, countryOfOrigin } = params;
+  const sort = params.sort ?? (search ? "SEARCH_MATCH" : "TRENDING_DESC");
+
   const response = await fetch(ANILIST_ENDPOINT, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      query: SEARCH_QUERY,
-      variables: { search: query, type, countryOfOrigin },
+      query: MEDIA_QUERY,
+      variables: { search: search || undefined, type, countryOfOrigin, sort: [sort] },
     }),
     next: { revalidate: 3600 },
   });
@@ -89,14 +106,5 @@ export async function searchAniList(
     throw new Error(json.errors.map((e) => e.message).join(", "));
   }
 
-  return (json.data?.Page.media ?? []).map((m) => ({
-    externalId: String(m.id),
-    title: m.title.english ?? m.title.romaji ?? "Untitled",
-    coverImageUrl: m.coverImage.large,
-    synopsis: m.description,
-    releaseYear: m.startDate.year,
-    totalEpisodes: m.episodes,
-    totalChapters: m.chapters,
-    genres: m.genres ?? [],
-  }));
+  return (json.data?.Page.media ?? []).map(normalize);
 }
