@@ -1,4 +1,4 @@
-import { prisma, MediaType } from "database";
+import { prisma, MediaType, LibraryStatus } from "database";
 import { DEMO_USER_ID } from "@/lib/demo-user";
 
 export async function getUserLibrary() {
@@ -33,5 +33,13 @@ export async function getLibraryEntryByMediaId(mediaId: number) {
   return prisma.libraryEntry.findFirst({
     where: { userId: DEMO_USER_ID, mediaId },
     include: { media: true },
+  });
+}
+
+export async function getLibraryByStatus(status: LibraryStatus) {
+  return prisma.libraryEntry.findMany({
+    where: { userId: DEMO_USER_ID, status },
+    include: { media: true },
+    orderBy: { updatedAt: "desc" },
   });
 }

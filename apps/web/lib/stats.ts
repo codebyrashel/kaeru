@@ -68,14 +68,12 @@ export interface ActivityDay {
   level: 0 | 1 | 2 | 3 | 4;
 }
 
-export async function getActivity(weeks = 12): Promise<ActivityDay[]> {
-  const totalDays = weeks * 7;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - (totalDays - 1));
+export async function getActivity(year = new Date().getFullYear()): Promise<ActivityDay[]> {
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 31);
 
   const logs = await prisma.progressLog.findMany({
-    where: { userId: DEMO_USER_ID, loggedAt: { gte: start } },
+    where: { userId: DEMO_USER_ID, loggedAt: { gte: start, lte: end } },
     select: { loggedAt: true },
   });
 
@@ -86,21 +84,23 @@ export async function getActivity(weeks = 12): Promise<ActivityDay[]> {
   }
 
   const days: ActivityDay[] = [];
-  for (let i = 0; i < totalDays; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    const key = d.toISOString().slice(0, 10);
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    const key = cursor.toISOString().slice(0, 10);
     const count = countsByDay.get(key) ?? 0;
     const level: ActivityDay["level"] =
       count === 0 ? 0 : count === 1 ? 1 : count <= 2 ? 2 : count <= 4 ? 3 : 4;
     days.push({ date: key, count, level });
+    cursor.setDate(cursor.getDate() + 1);
   }
 
   return days;
 }
 
 export function computeStreak(activity: ActivityDay[]): number {
-  const mostRecentFirst = [...activity].reverse();
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const upToToday = activity.filter((d) => d.date <= todayKey);
+  const mostRecentFirst = [...upToToday].reverse();
   let streak = 0;
 
   for (let i = 0; i < mostRecentFirst.length; i++) {
@@ -108,7 +108,6 @@ export function computeStreak(activity: ActivityDay[]): number {
     if (day.count > 0) {
       streak += 1;
     } else if (i === 0) {
-      // No activity yet today doesn't break the streak — the day isn't over.
       continue;
     } else {
       break;

@@ -15,7 +15,7 @@ export function LibraryCard({ entry }: { entry: EntryWithMedia }) {
       href={`/title/${entry.mediaId}`}
       className="block overflow-hidden rounded-[10px] bg-surface-1 transition-transform hover:scale-[1.02]"
     >
-      <div className={`relative flex h-32 items-center justify-center ${category.bg}`}>
+      <div className={`relative flex aspect-2/3 items-center justify-center ${category.bg}`}>
         {entry.media.coverImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -32,7 +32,7 @@ export function LibraryCard({ entry }: { entry: EntryWithMedia }) {
       </div>
       <div className="p-2.5">
         <p className="mb-1.5 truncate text-xs font-medium text-text-primary">{entry.media.title}</p>
-        {percent !== null ? (
+        {(entry.status === "WATCHING" || entry.status === "READING") && percent !== null ? (
           <>
             <div className="mb-1 h-1 overflow-hidden rounded-full bg-surface-2">
               <div className="h-full bg-accent" style={{ width: `${percent}%` }} />

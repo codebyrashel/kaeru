@@ -31,7 +31,7 @@ export function DiscoveryCard({
 
   return (
     <div className="overflow-hidden rounded-[10px] bg-surface-1">
-      <div className={`relative h-40 ${style.bg}`}>
+      <div className={`relative aspect-2/3 ${style.bg}`}>
         {result.coverImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

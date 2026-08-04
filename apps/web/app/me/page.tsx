@@ -7,10 +7,12 @@ import { GenreBars } from "@/components/genre-bars";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
 
 export default async function MePage() {
+  const year = new Date().getFullYear();
+
   const [user, stats, activity] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: DEMO_USER_ID } }),
     getLibraryStats(),
-    getActivity(),
+    getActivity(year),
   ]);
 
   const streak = computeStreak(activity);
@@ -55,7 +57,7 @@ export default async function MePage() {
         <TimeSplitDonut countsByType={stats.countsByType} total={stats.totalTitles} />
         <div className="flex flex-col gap-5">
           {stats.topGenres.length > 0 && <GenreBars genres={stats.topGenres} />}
-          <ActivityHeatmap days={activity} />
+          <ActivityHeatmap days={activity} year={year} />
         </div>
       </div>
 

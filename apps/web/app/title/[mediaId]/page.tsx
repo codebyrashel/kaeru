@@ -38,7 +38,7 @@ export default async function TitleDetailPage({
   return (
     <div className="px-6 py-5">
       <div className="mb-5 flex gap-5">
-        <div className={`h-56 w-40 shrink-0 overflow-hidden rounded-[10px] ${category.bg}`}>
+        <div className={`aspect-[2/3] w-40 shrink-0 overflow-hidden rounded-[10px] ${category.bg}`}>
           {media.coverImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={media.coverImageUrl} alt={media.title} className="h-full w-full object-cover" />
