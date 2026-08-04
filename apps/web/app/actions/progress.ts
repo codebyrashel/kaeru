@@ -3,9 +3,7 @@
 import { prisma } from "database";
 import type { LibraryStatus } from "database";
 import { revalidatePath } from "next/cache";
-
-// TEMP: matches DEMO_USER_ID elsewhere. See ADR-0004.
-const DEMO_USER_ID = 1;
+import { DEMO_USER_ID } from "@/lib/demo-user";
 
 export async function updateProgress(
   libraryEntryId: number,

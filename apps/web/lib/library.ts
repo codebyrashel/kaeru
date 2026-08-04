@@ -1,7 +1,5 @@
 import { prisma, MediaType } from "database";
-
-// TEMP: matches DEMO_USER_ID in app/actions/media.ts. See ADR-0004.
-const DEMO_USER_ID = 1;
+import { DEMO_USER_ID } from "@/lib/demo-user";
 
 export async function getUserLibrary() {
   return prisma.libraryEntry.findMany({

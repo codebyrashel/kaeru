@@ -12,6 +12,7 @@ import {
   Clock,
   CheckCheck,
   Pause,
+  User,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -82,6 +83,20 @@ export function Sidebar() {
             );
           })}
         </nav>
+      </div>
+
+      <div className="mt-6 border-t border-border pt-3.5">
+        <Link
+          href="/me"
+          className={`flex items-center gap-2.5 rounded px-2.5 py-2 text-[13px] transition-colors ${
+            pathname === "/me"
+              ? "bg-accent-bg text-accent-text"
+              : "text-text-secondary hover:bg-surface-2"
+          }`}
+        >
+          <User size={16} />
+          Me
+        </Link>
       </div>
     </aside>
   );

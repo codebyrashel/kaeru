@@ -4,10 +4,7 @@ import { prisma } from "database";
 import type { MediaType } from "database";
 import { fetchAniListMedia, type NormalizedMedia, type AniListSort } from "@/lib/anilist";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
-
-// TEMP: no auth yet — every write attributes to this seeded user.
-// Replace once an auth phase is built. See ADR-0004.
-const DEMO_USER_ID = 1;
+import { DEMO_USER_ID } from "@/lib/demo-user";
 
 export async function searchMedia(
   query: string,
