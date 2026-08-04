@@ -1,0 +1,23 @@
+import { prisma } from "database";
+
+// TEMP: matches DEMO_USER_ID in app/actions/media.ts. See ADR-0004.
+const DEMO_USER_ID = 1;
+
+export async function getUserLibrary() {
+  return prisma.libraryEntry.findMany({
+    where: { userId: DEMO_USER_ID },
+    include: { media: true },
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+export function progressPercent(entry: {
+  currentEpisode: number | null;
+  currentChapter: number | null;
+  media: { totalEpisodes: number | null; totalChapters: number | null };
+}): number | null {
+  const current = entry.currentEpisode ?? entry.currentChapter ?? 0;
+  const total = entry.media.totalEpisodes ?? entry.media.totalChapters ?? null;
+  if (!total || total === 0) return null;
+  return Math.min(100, Math.round((current / total) * 100));
+}

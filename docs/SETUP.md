@@ -37,4 +37,15 @@
 - Only one pnpm-workspace.yaml and one pnpm-lock.yaml should exist,
   both at the repo root. `pnpm create next-app` scaffolds its own by
   default - delete them from apps/web if they reappear after a
-  re-scaffold.
+  re-scaffold
+
+
+## Known gotcha: `Record<X, { ... }>` type errors
+
+If a multi-property inline object type inside a generic (e.g.
+`Record<Key, { a: string; b: string }>`) throws a wall of "',' expected"
+/ "';' expected" errors, check whether `> =` (generic close, space,
+equals) collapsed into `>=` somewhere in the file - TypeScript then
+parses the whole thing as a comparison expression instead of a type
+annotation. Fix: extract the object into a named `type` alias instead
+of inlining it. Happened in media-category.ts and media-style.ts.

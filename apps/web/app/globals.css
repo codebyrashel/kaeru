@@ -1,26 +1,123 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface-0: #0b0b0c;
+  --surface-1: #18181b;
+  --surface-2: #212124;
+  --surface-3: #2a2a2e;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+
+  --border: #2e2e33;
+  --border-strong: #3f3f46;
+
+  --accent: #378add;
+  --accent-bg: #0c447c;
+  --accent-text: #85b7eb;
+
+  --success: #639922;
+  --success-bg: #173404;
+  --success-text: #97c459;
+
+  --warning: #ef9f27;
+  --warning-bg: #412402;
+  --warning-text: #fac775;
+
+  --danger: #e24b4a;
+  --danger-bg: #501313;
+  --danger-text: #f09595;
+
+  --brand: #d4537e;
+  --brand-hover: #993556;
+  --on-brand: #fbeaf0;
+
+  --category-anime: #7f77dd;
+  --category-anime-bg: #26215c;
+  --category-anime-text: #eeedfe;
+
+  --category-manga: #1d9e75;
+  --category-manga-bg: #04342c;
+  --category-manga-text: #e1f5ee;
+
+  --category-manhwa: #d85a30;
+  --category-manhwa-bg: #4a1b0c;
+  --category-manhwa-text: #faece7;
+
+  --category-manhua: #d4537e;
+  --category-manhua-bg: #4b1528;
+  --category-manhua-text: #fbeaf0;
+
+  --category-movie: #378add;
+  --category-movie-bg: #042c53;
+  --category-movie-text: #e6f1fb;
+
+  --radius: 8px;
+  --radius-card: 12px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-text: var(--accent-text);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-text: var(--success-text);
+
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning-text);
+
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-text: var(--danger-text);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-on-brand: var(--on-brand);
+
+  --color-category-anime: var(--category-anime);
+  --color-category-anime-bg: var(--category-anime-bg);
+  --color-category-anime-text: var(--category-anime-text);
+
+  --color-category-manga: var(--category-manga);
+  --color-category-manga-bg: var(--category-manga-bg);
+  --color-category-manga-text: var(--category-manga-text);
+
+  --color-category-manhwa: var(--category-manhwa);
+  --color-category-manhwa-bg: var(--category-manhwa-bg);
+  --color-category-manhwa-text: var(--category-manhwa-text);
+
+  --color-category-manhua: var(--category-manhua);
+  --color-category-manhua-bg: var(--category-manhua-bg);
+  --color-category-manhua-text: var(--category-manhua-text);
+
+  --color-category-movie: var(--category-movie);
+  --color-category-movie-bg: var(--category-movie-bg);
+  --color-category-movie-text: var(--category-movie-text);
+
+  --radius-DEFAULT: var(--radius);
+  --radius-card: var(--radius-card);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface-0);
+  color: var(--text-primary);
 }
