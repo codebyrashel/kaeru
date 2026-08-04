@@ -13,5 +13,11 @@
       "onFail": "download"
     }
   },
-  "scripts": {}
+  "scripts": {
+    "dev": "pnpm --filter database db:generate && pnpm --filter web dev",
+    "build": "pnpm --filter database db:deploy && pnpm --filter database db:generate && pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "lint": "pnpm --filter web lint",
+    "studio": "pnpm --filter database db:studio"
+  }
 }
