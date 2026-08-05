@@ -121,3 +121,26 @@ body {
   background: var(--surface-0);
   color: var(--text-primary);
 }
+
+
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface-0);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-0);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--surface-0);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

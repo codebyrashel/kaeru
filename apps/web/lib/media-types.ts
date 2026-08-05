@@ -8,4 +8,10 @@ export interface NormalizedMedia {
   totalChapters: number | null;
   genres: string[];
   averageScore: number | null;
+  releaseStatus: string | null;
+}
+
+export interface MediaPage {
+  results: NormalizedMedia[];
+  hasNextPage: boolean;
 }

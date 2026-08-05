@@ -10,12 +10,14 @@ export function ProgressStepper({
   total,
   field,
   unitLabel,
+  ongoing = false,
 }: {
   entryId: number;
   current: number;
   total: number | null;
   field: "currentEpisode" | "currentChapter";
   unitLabel: string;
+  ongoing?: boolean;
 }) {
   const [value, setValue] = useState(current);
   const [isPending, startTransition] = useTransition();
@@ -49,7 +51,9 @@ export function ProgressStepper({
           onBlur={() => commit(value)}
           className="w-16 rounded bg-surface-2 px-2 py-1.5 text-center text-sm text-text-primary [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
-        <span className="text-sm text-text-muted">/ {total ?? "?"} {unitLabel}</span>
+        <span className="text-sm text-text-muted">
+          / {total ?? (ongoing ? "Ongoing" : "?")} {total ? unitLabel : ""}
+        </span>
         <button
           onClick={() => commit(value + 1)}
           disabled={isPending || (total !== null && value >= total)}

@@ -1,19 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Plus, Check, Star } from "lucide-react";
 import { CATEGORY_STYLES } from "@/lib/media-style";
+import { CoverImage } from "@/components/cover-image";
 import type { MediaType } from "database";
-import type { NormalizedMedia } from "@/lib/anilist";
+import type { NormalizedMedia } from "@/lib/media-types";
 
 export function DiscoveryCard({
   result,
   category,
+  source,
   alreadyAdded,
   onAdd,
 }: {
   result: NormalizedMedia;
   category: MediaType;
+  source: "anilist" | "tmdb";
   alreadyAdded: boolean;
   onAdd: (result: NormalizedMedia) => Promise<void>;
 }) {
@@ -21,7 +25,9 @@ export function DiscoveryCard({
   const [pending, setPending] = useState(false);
   const style = CATEGORY_STYLES[category];
 
-  async function handleAdd() {
+  async function handleAdd(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
     if (added || pending) return;
     setPending(true);
     await onAdd(result);
@@ -30,19 +36,15 @@ export function DiscoveryCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-[10px] bg-surface-1">
+    <Link href={`/title/${source}/${result.externalId}`} className="block overflow-hidden rounded-[10px] bg-surface-1">
       <div className={`relative aspect-2/3 ${style.bg}`}>
-        {result.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+        <div className={`flex h-full items-center justify-center text-xs ${style.text}`}>{style.label}</div>
+        {result.coverImageUrl && (
+          <CoverImage
             src={result.coverImageUrl}
             alt={result.title}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-        ) : (
-          <div className={`flex h-full items-center justify-center text-xs ${style.text}`}>
-            {style.label}
-          </div>
         )}
         {result.averageScore !== null && (
           <span className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded bg-black/40 px-1.5 py-0.5 text-[10px] text-white">
@@ -69,6 +71,6 @@ export function DiscoveryCard({
           {result.totalChapters ? ` · ${result.totalChapters} ch` : ""}
         </p>
       </div>
-    </div>
+    </Link>
   );
 }

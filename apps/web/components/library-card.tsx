@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { CATEGORY_STYLES, STATUS_STYLES } from "@/lib/media-style";
-import { progressPercent } from "@/lib/library";
+import { progressPercent } from "@/lib/progress";
+import { CoverImage } from "@/components/cover-image";
 import type { LibraryEntry, Media, MediaType, LibraryStatus } from "database";
+import { RemoveFromLibraryButton } from "@/components/remove-from-library-button";
 
 type EntryWithMedia = LibraryEntry & { media: Media };
 
@@ -9,26 +11,26 @@ export function LibraryCard({ entry }: { entry: EntryWithMedia }) {
   const category = CATEGORY_STYLES[entry.media.type as MediaType];
   const status = STATUS_STYLES[entry.status as LibraryStatus];
   const percent = progressPercent(entry);
+  const sourceSlug = entry.media.externalSource === "ANILIST" ? "anilist" : "tmdb";
 
   return (
     <Link
-      href={`/title/${entry.mediaId}`}
+      href={`/title/${sourceSlug}/${entry.media.externalId}`}
       className="block overflow-hidden rounded-[10px] bg-surface-1 transition-transform hover:scale-[1.02]"
     >
       <div className={`relative flex aspect-2/3 items-center justify-center ${category.bg}`}>
-        {entry.media.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+        <span className={`text-xs ${category.text}`}>{category.label}</span>
+        {entry.media.coverImageUrl && (
+          <CoverImage
             src={entry.media.coverImageUrl}
             alt={entry.media.title}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-        ) : (
-          <span className={`text-xs ${category.text}`}>{category.label}</span>
         )}
         <span className={`absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] ${category.bg} ${category.text}`}>
           {category.label}
         </span>
+        <RemoveFromLibraryButton entryId={entry.id} />
       </div>
       <div className="p-2.5">
         <p className="mb-1.5 truncate text-xs font-medium text-text-primary">{entry.media.title}</p>

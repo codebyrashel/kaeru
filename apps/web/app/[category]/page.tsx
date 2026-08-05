@@ -5,8 +5,8 @@ import { getLibraryExternalIds } from "@/lib/library";
 import { fetchAniListMedia } from "@/lib/anilist";
 import { fetchTmdbDiscovery } from "@/lib/tmdb";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
-import type { MediaType } from "database";
 import type { NormalizedMedia } from "@/lib/media-types";
+import type { MediaType } from "database";
 
 export function generateStaticParams() {
   return CATEGORY_SLUGS.map((category) => ({ category }));
@@ -39,18 +39,18 @@ export default async function DiscoveryPage({
   const mediaType: MediaType = SLUG_TO_MEDIA_TYPE[slug];
 
   if (mediaType === "MOVIE") {
-    let movieData: { initialResults: NormalizedMedia[]; addedIds: Set<string> } | null = null;
-  
+    let movieData: { initialResults: NormalizedMedia[]; hasNextPage: boolean; addedIds: Set<string> } | null = null;
+
     try {
-      const [initialResults, addedIds] = await Promise.all([
-        fetchTmdbDiscovery("trending"),
+      const [page, addedIds] = await Promise.all([
+        fetchTmdbDiscovery("trending", 1),
         getLibraryExternalIds("MOVIE"),
       ]);
-      movieData = { initialResults, addedIds };
+      movieData = { initialResults: page.results, hasNextPage: page.hasNextPage, addedIds };
     } catch {
       movieData = null;
     }
-  
+
     if (!movieData) {
       return (
         <div className="px-6 py-5">
@@ -60,32 +60,32 @@ export default async function DiscoveryPage({
         </div>
       );
     }
-  
+
     return (
       <DiscoveryGrid
         category="MOVIE"
-        slug={slug}
         source="tmdb"
         sortOptions={TMDB_SORTS}
         initialResults={movieData.initialResults}
+        initialHasNextPage={movieData.hasNextPage}
         initialAddedIds={[...movieData.addedIds]}
       />
     );
   }
 
   const { type, country } = CATEGORY_TO_ANILIST[mediaType];
-  const [initialResults, addedIds] = await Promise.all([
-    fetchAniListMedia({ type, countryOfOrigin: country, sort: "TRENDING_DESC" }),
+  const [page, addedIds] = await Promise.all([
+    fetchAniListMedia({ type, countryOfOrigin: country, sort: "TRENDING_DESC", page: 1 }),
     getLibraryExternalIds(mediaType),
   ]);
 
   return (
     <DiscoveryGrid
       category={mediaType}
-      slug={slug}
       source="anilist"
       sortOptions={ANILIST_SORTS}
-      initialResults={initialResults}
+      initialResults={page.results}
+      initialHasNextPage={page.hasNextPage}
       initialAddedIds={[...addedIds]}
     />
   );

@@ -12,3 +12,14 @@ export const CATEGORY_TO_ANILIST: Record<Exclude<MediaType, "MOVIE">, CategoryMa
   MANHWA: { type: "MANGA", country: "KR" },
   MANHUA: { type: "MANGA", country: "CN" },
 };
+
+
+export function anilistToMediaType(
+  type: AniListType,
+  countryOfOrigin: string | null,
+): Exclude<MediaType, "MOVIE"> {
+  if (type === "ANIME") return "ANIME";
+  if (countryOfOrigin === "KR") return "MANHWA";
+  if (countryOfOrigin === "CN") return "MANHUA";
+  return "MANGA";
+}

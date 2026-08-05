@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Search } from "lucide-react";
-import { CategoryTabs } from "@/components/category-tabs";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Search, Loader2 } from "lucide-react";
 import { DiscoveryCard } from "@/components/discovery-card";
 import { getDiscoveryMedia, searchMedia, addToLibrary } from "@/app/actions/media";
 import { getMovieDiscovery, searchMovies } from "@/app/actions/movies";
@@ -10,62 +9,135 @@ import type { NormalizedMedia } from "@/lib/media-types";
 import type { AniListSort } from "@/lib/anilist";
 import type { TmdbSort } from "@/lib/tmdb";
 import type { MediaType } from "database";
-import type { CategorySlug } from "@/lib/category-routes";
 
 export interface SortOption {
   value: string;
   label: string;
 }
 
+const DEBOUNCE_MS = 400;
+
 export function DiscoveryGrid({
   category,
-  slug,
   source,
   sortOptions,
   initialResults,
+  initialHasNextPage,
   initialAddedIds,
 }: {
   category: MediaType;
-  slug: CategorySlug;
   source: "anilist" | "tmdb";
   sortOptions: SortOption[];
   initialResults: NormalizedMedia[];
+  initialHasNextPage: boolean;
   initialAddedIds: string[];
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState(sortOptions[0]?.value ?? "");
   const [results, setResults] = useState<NormalizedMedia[]>(initialResults);
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage);
+  const [page, setPage] = useState(1);
   const [addedIds, setAddedIds] = useState(new Set(initialAddedIds));
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const isFirstRun = useRef(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  async function fetchResults(): Promise<NormalizedMedia[]> {
-    if (source === "anilist") {
-      const anilistCategory = category as Exclude<MediaType, "MOVIE">;
-      return query.trim()
-        ? searchMedia(query, anilistCategory)
-        : getDiscoveryMedia(anilistCategory, sort as AniListSort);
-    }
-    return query.trim() ? searchMovies(query) : getMovieDiscovery(sort as TmdbSort);
-  }
+  const isFirstRun = useRef(true);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreRef = useRef(false);
+
+  const fetchPage = useCallback(
+    async (targetPage: number, activeQuery: string, activeSort: string) => {
+      if (source === "anilist") {
+        const anilistCategory = category as Exclude<MediaType, "MOVIE">;
+        return activeQuery.trim()
+          ? searchMedia(activeQuery, anilistCategory, targetPage)
+          : getDiscoveryMedia(anilistCategory, activeSort as AniListSort, targetPage);
+      }
+      return activeQuery.trim()
+        ? searchMovies(activeQuery, targetPage)
+        : getMovieDiscovery(activeSort as TmdbSort, targetPage);
+    },
+    [category, source],
+  );
+
+  const runSearch = useCallback(
+    (activeQuery: string, activeSort: string) => {
+      startTransition(async () => {
+        setError(null);
+        try {
+          const data = await fetchPage(1, activeQuery, activeSort);
+          setResults(data.results);
+          setHasNextPage(data.hasNextPage);
+          setPage(1);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Something went wrong.");
+        }
+      });
+    },
+    [fetchPage],
+  );
 
   useEffect(() => {
     if (isFirstRun.current) {
       isFirstRun.current = false;
       return;
     }
-    startTransition(async () => {
-      setResults(await fetchResults());
-    });
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => runSearch(query, sort), DEBOUNCE_MS);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  useEffect(() => {
+    if (isFirstRun.current) return;
+    if (query.trim()) return;
+    runSearch(query, sort);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort]);
 
-  function handleSearch(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    startTransition(async () => {
-      setResults(await fetchResults());
-    });
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    runSearch(query, sort);
   }
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !loadingMoreRef.current && !isPending) {
+          loadingMoreRef.current = true;
+          setIsLoadingMore(true);
+          const nextPage = page + 1;
+          fetchPage(nextPage, query, sort)
+            .then((data) => {
+              setResults((prev) => {
+                const seen = new Set(prev.map((r) => r.externalId));
+                const deduped = data.results.filter((r) => !seen.has(r.externalId));
+                return [...prev, ...deduped];
+              });
+              setHasNextPage(data.hasNextPage);
+              setPage(nextPage);
+            })
+            .catch((e) => setError(e instanceof Error ? e.message : "Something went wrong."))
+            .finally(() => {
+              loadingMoreRef.current = false;
+              setIsLoadingMore(false);
+            });
+        }
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [page, hasNextPage, isPending, query, sort, fetchPage]);
 
   async function handleAdd(result: NormalizedMedia) {
     await addToLibrary(category, result);
@@ -73,54 +145,83 @@ export function DiscoveryGrid({
   }
 
   return (
-    <div className="px-6 py-5">
-      <CategoryTabs current={slug} />
-
-      <form onSubmit={handleSearch} className="mb-4 flex items-center gap-2">
-        <div className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-surface-1 px-3">
-          <Search size={14} className="text-text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Search ${category.toLowerCase()}`}
-            className="w-full bg-transparent text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none"
-          />
-        </div>
-        {!query.trim() && (
-          <div className="flex gap-1">
-            {sortOptions.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                onClick={() => setSort(s.value)}
-                className={`whitespace-nowrap rounded px-3 py-2 text-xs ${
-                  sort === s.value
-                    ? "bg-surface-2 text-text-primary"
-                    : "text-text-secondary hover:bg-surface-1"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </form>
-
-      {isPending && results.length === 0 ? (
-        <p className="text-sm text-text-muted">Loading…</p>
-      ) : (
-        <div className="grid grid-cols-5 gap-2.5">
-          {results.map((result) => (
-            <DiscoveryCard
-              key={result.externalId}
-              result={result}
-              category={category}
-              alreadyAdded={addedIds.has(result.externalId)}
-              onAdd={handleAdd}
+    <div>
+      <div className="sticky top-0 z-10 bg-surface-0 px-6 pb-3 pt-5">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <div className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-surface-1 px-3">
+            <Search size={14} className="text-text-muted" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${category.toLowerCase()}`}
+              className="w-full bg-transparent text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none"
             />
-          ))}
-        </div>
-      )}
+            {isPending && (
+              <Loader2 size={13} className="animate-spin text-text-muted" />
+            )}
+          </div>
+  
+          {!query.trim() && (
+            <div className="flex gap-1">
+              {sortOptions.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setSort(s.value)}
+                  className={`whitespace-nowrap rounded px-3 py-2 text-xs ${
+                    sort === s.value
+                      ? "bg-surface-2 text-text-primary"
+                      : "text-text-secondary hover:bg-surface-1"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </form>
+      </div>
+  
+      <div className="px-6 pb-5">
+        {error && (
+          <p className="mb-3 text-sm text-danger-text">{error}</p>
+        )}
+  
+        {isPending && results.length === 0 ? (
+          <p className="text-sm text-text-muted">Loading…</p>
+        ) : results.length === 0 ? (
+          <p className="text-sm text-text-muted">No matches found.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-5 gap-2.5">
+              {results.map((result) => (
+                <DiscoveryCard
+                  key={result.externalId}
+                  result={result}
+                  category={category}
+                  source={source}
+                  alreadyAdded={addedIds.has(result.externalId)}
+                  onAdd={handleAdd}
+                />
+              ))}
+            </div>
+  
+            <div ref={sentinelRef} className="h-10" />
+  
+            {isLoadingMore && (
+              <p className="py-3 text-center text-xs text-text-muted">
+                Loading more…
+              </p>
+            )}
+  
+            {!hasNextPage && (
+              <p className="py-3 text-center text-xs text-text-muted">
+                You&apos;ve reached the end.
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
