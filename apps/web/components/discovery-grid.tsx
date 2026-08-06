@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { DiscoveryCard } from "@/components/discovery-card";
 import { getDiscoveryMedia, searchMedia, addToLibrary } from "@/app/actions/media";
@@ -34,6 +34,7 @@ export function DiscoveryGrid({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState(sortOptions[0]?.value ?? "");
+  const [genre, setGenre] = useState<string | "ALL">("ALL");
   const [results, setResults] = useState<NormalizedMedia[]>(initialResults);
   const [hasNextPage, setHasNextPage] = useState(initialHasNextPage);
   const [page, setPage] = useState(1);
@@ -46,6 +47,17 @@ export function DiscoveryGrid({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreRef = useRef(false);
+
+  const availableGenres = useMemo(() => {
+    const set = new Set<string>();
+    results.forEach((r) => r.genres.forEach((g) => set.add(g)));
+    return [...set].sort();
+  }, [results]);
+
+  const visibleResults = useMemo(
+    () => (genre === "ALL" ? results : results.filter((r) => r.genres.includes(genre))),
+    [results, genre],
+  );
 
   const fetchPage = useCallback(
     async (targetPage: number, activeQuery: string, activeSort: string) => {
@@ -71,6 +83,7 @@ export function DiscoveryGrid({
           setResults(data.results);
           setHasNextPage(data.hasNextPage);
           setPage(1);
+          setGenre("ALL");
         } catch (e) {
           setError(e instanceof Error ? e.message : "Something went wrong.");
         }
@@ -146,7 +159,7 @@ export function DiscoveryGrid({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 bg-surface-0 px-6 pb-3 pt-5">
+      <div className="sticky top-0 z-10 flex flex-col gap-2 bg-surface-0 px-6 pb-3 pt-5">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <div className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-surface-1 px-3">
             <Search size={14} className="text-text-muted" />
@@ -156,11 +169,8 @@ export function DiscoveryGrid({
               placeholder={`Search ${category.toLowerCase()}`}
               className="w-full bg-transparent text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none"
             />
-            {isPending && (
-              <Loader2 size={13} className="animate-spin text-text-muted" />
-            )}
+            {isPending && <Loader2 size={13} className="animate-spin text-text-muted" />}
           </div>
-  
           {!query.trim() && (
             <div className="flex gap-1">
               {sortOptions.map((s) => (
@@ -169,9 +179,7 @@ export function DiscoveryGrid({
                   type="button"
                   onClick={() => setSort(s.value)}
                   className={`whitespace-nowrap rounded px-3 py-2 text-xs ${
-                    sort === s.value
-                      ? "bg-surface-2 text-text-primary"
-                      : "text-text-secondary hover:bg-surface-1"
+                    sort === s.value ? "bg-surface-2 text-text-primary" : "text-text-secondary hover:bg-surface-1"
                   }`}
                 >
                   {s.label}
@@ -180,21 +188,43 @@ export function DiscoveryGrid({
             </div>
           )}
         </form>
-      </div>
-  
-      <div className="px-6 pb-5">
-        {error && (
-          <p className="mb-3 text-sm text-danger-text">{error}</p>
+
+        {availableGenres.length > 0 && (
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <button
+              onClick={() => setGenre("ALL")}
+              className={`shrink-0 rounded-full px-3 py-1 text-[11px] transition-colors ${
+                genre === "ALL" ? "bg-surface-2 text-text-primary" : "text-text-muted hover:bg-surface-1"
+              }`}
+            >
+              All genres
+            </button>
+            {availableGenres.map((g) => (
+              <button
+                key={g}
+                onClick={() => setGenre(g)}
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[11px] transition-colors ${
+                  genre === g ? "bg-surface-2 text-text-primary" : "text-text-muted hover:bg-surface-1"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
         )}
-  
+      </div>
+
+      <div className="px-6 pb-5">
+        {error && <p className="mb-3 text-sm text-danger-text">{error}</p>}
+
         {isPending && results.length === 0 ? (
           <p className="text-sm text-text-muted">Loading…</p>
-        ) : results.length === 0 ? (
+        ) : visibleResults.length === 0 ? (
           <p className="text-sm text-text-muted">No matches found.</p>
         ) : (
           <>
-            <div className="grid grid-cols-5 gap-2.5">
-              {results.map((result) => (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5">
+              {visibleResults.map((result) => (
                 <DiscoveryCard
                   key={result.externalId}
                   result={result}
@@ -205,20 +235,9 @@ export function DiscoveryGrid({
                 />
               ))}
             </div>
-  
             <div ref={sentinelRef} className="h-10" />
-  
-            {isLoadingMore && (
-              <p className="py-3 text-center text-xs text-text-muted">
-                Loading more…
-              </p>
-            )}
-  
-            {!hasNextPage && (
-              <p className="py-3 text-center text-xs text-text-muted">
-                You&apos;ve reached the end.
-              </p>
-            )}
+            {isLoadingMore && <p className="py-3 text-center text-xs text-text-muted">Loading more…</p>}
+            {!hasNextPage && <p className="py-3 text-center text-xs text-text-muted">You&apos;ve reached the end.</p>}
           </>
         )}
       </div>

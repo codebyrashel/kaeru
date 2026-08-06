@@ -37,15 +37,12 @@ export async function getLibraryStats(): Promise<LibraryStats> {
     countsByType[type] += 1;
     episodesWatched += entry.currentEpisode ?? 0;
     chaptersRead += entry.currentChapter ?? 0;
-
     for (const genre of entry.media.genres) {
       genreCounts.set(genre, (genreCounts.get(genre) ?? 0) + 1);
     }
   }
 
-  // Heuristic estimate, not tracked watch time — flagged as such in the UI.
-  const estimatedMinutes =
-    episodesWatched * 24 + chaptersRead * 6 + countsByType.MOVIE * 110;
+  const estimatedMinutes = episodesWatched * 24 + chaptersRead * 6 + countsByType.MOVIE * 110;
 
   const topGenres = [...genreCounts.entries()]
     .sort((a, b) => b[1] - a[1])
@@ -68,9 +65,19 @@ export interface ActivityDay {
   level: 0 | 1 | 2 | 3 | 4;
 }
 
+// Always derive date keys from LOCAL date parts, never toISOString()
+// (which is UTC) — mixing the two caused today's activity to sometimes
+// not appear for timezones ahead of UTC.
+function dateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export async function getActivity(year = new Date().getFullYear()): Promise<ActivityDay[]> {
-  const start = new Date(year, 0, 1);
-  const end = new Date(year, 11, 31);
+  const start = new Date(year, 0, 1, 0, 0, 0, 0);
+  const end = new Date(year, 11, 31, 23, 59, 59, 999);
 
   const logs = await prisma.progressLog.findMany({
     where: { userId: DEMO_USER_ID, loggedAt: { gte: start, lte: end } },
@@ -79,14 +86,14 @@ export async function getActivity(year = new Date().getFullYear()): Promise<Acti
 
   const countsByDay = new Map<string, number>();
   for (const log of logs) {
-    const key = log.loggedAt.toISOString().slice(0, 10);
+    const key = dateKey(log.loggedAt);
     countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1);
   }
 
   const days: ActivityDay[] = [];
   const cursor = new Date(start);
   while (cursor <= end) {
-    const key = cursor.toISOString().slice(0, 10);
+    const key = dateKey(cursor);
     const count = countsByDay.get(key) ?? 0;
     const level: ActivityDay["level"] =
       count === 0 ? 0 : count === 1 ? 1 : count <= 2 ? 2 : count <= 4 ? 3 : 4;
@@ -98,7 +105,7 @@ export async function getActivity(year = new Date().getFullYear()): Promise<Acti
 }
 
 export function computeStreak(activity: ActivityDay[]): number {
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = dateKey(new Date());
   const upToToday = activity.filter((d) => d.date <= todayKey);
   const mostRecentFirst = [...upToToday].reverse();
   let streak = 0;
