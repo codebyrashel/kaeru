@@ -2,10 +2,10 @@
 
 import { prisma } from "database";
 import type { MediaType } from "database";
-import { fetchAniListMedia, type AniListSort } from "@/lib/anilist";
+import { fetchAniListMedia, type AniListSort } from "@/lib/api/anilist";
 import type { MediaPage, NormalizedMedia } from "@/lib/media-types";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
-import { requireUserId } from "@/lib/session";
+import { requireUserId } from "@/lib/auth/session";
 
 export async function searchMedia(
   query: string,

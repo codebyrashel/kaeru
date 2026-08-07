@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CATEGORY_SLUGS, SLUG_TO_MEDIA_TYPE, type CategorySlug } from "@/lib/category-routes";
-import { DiscoveryGrid, type SortOption } from "@/components/discovery-grid";
+import { DiscoveryGrid, type SortOption } from "@/components/discovery/discovery-grid";
 import { getLibraryExternalIds } from "@/lib/library";
-import { fetchAniListMedia } from "@/lib/anilist";
-import { fetchTmdbDiscovery } from "@/lib/tmdb";
+import { fetchAniListMedia } from "@/lib/api/anilist";
+import { fetchTmdbDiscovery } from "@/lib/api/tmdb";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
 import type { NormalizedMedia } from "@/lib/media-types";
 import type { MediaType } from "database";

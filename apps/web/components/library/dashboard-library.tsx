@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { LibraryCard } from "@/components/library-card";
+import { LibraryCard } from "@/components/library/library-card";
 import type { LibraryEntry, Media, LibraryStatus, MediaType } from "database";
 
 type EntryWithMedia = LibraryEntry & { media: Media };
@@ -45,7 +45,7 @@ export function DashboardLibrary({ entries }: { entries: EntryWithMedia[] }) {
   return (
     <div>
       <div className="sticky top-0 z-10 flex flex-col gap-2 bg-surface-0 px-6 pb-3 pt-5">
-        <div className="flex h-9 w-full items-center gap-2 rounded-[8px] border border-border bg-surface-1 px-3">
+        <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-border bg-surface-1 px-3">
           <Search size={14} className="text-text-muted" />
           <input
             value={query}

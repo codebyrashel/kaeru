@@ -1,5 +1,5 @@
 import type { MediaType } from "database";
-import type { AniListCountry, AniListType } from "./anilist";
+import type { AniListCountry, AniListType } from "./api/anilist";
 
 type CategoryMapping = {
   type: AniListType;

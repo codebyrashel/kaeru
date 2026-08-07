@@ -1,15 +1,15 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getLibraryEntryByExternalId } from "@/lib/library";
-import { fetchAniListMediaById } from "@/lib/anilist";
-import { fetchTmdbMovieById } from "@/lib/tmdb";
+import { fetchAniListMediaById } from "@/lib/api/anilist";
+import { fetchTmdbMovieById } from "@/lib/api/tmdb";
 import { anilistToMediaType } from "@/lib/media-category";
 import { CATEGORY_STYLES } from "@/lib/media-style";
-import { StatusSelector } from "@/components/status-selector";
-import { ProgressStepper } from "@/components/progress-stepper";
-import { CoverImage } from "@/components/cover-image";
-import { AddToLibraryButton } from "@/components/add-to-library-button";
-import { RemoveLinkButton } from "@/components/remove-link-button";
+import { StatusSelector } from "@/components/library/status-selector";
+import { ProgressStepper } from "@/components/library/progress-stepper";
+import { CoverImage } from "@/components/shared/cover-image";
+import { AddToLibraryButton } from "@/components/discovery/add-to-library-button";
+import { RemoveLinkButton } from "@/components/library/remove-link-button";
 import type { NormalizedMedia } from "@/lib/media-types";
 import type { MediaType } from "database";
 

@@ -1,10 +1,10 @@
 import { auth } from "@/auth";
 import { prisma } from "database";
 import { getLibraryStats, getActivity, computeStreak } from "@/lib/stats";
-import { StatCard } from "@/components/stat-card";
-import { TimeSplitDonut } from "@/components/time-split-donut";
-import { GenreBars } from "@/components/genre-bars";
-import { ActivityHeatmap } from "@/components/activity-heatmap";
+import { StatCard } from "@/components/stats/stat-card";
+import { TimeSplitDonut } from "@/components/stats/time-split-donut";
+import { GenreBars } from "@/components/stats/genre-bars";
+import { ActivityHeatmap } from "@/components/stats/activity-heatmap";
 
 export default async function MePage() {
   const session = await auth();

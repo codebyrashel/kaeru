@@ -1,6 +1,6 @@
 "use server";
 
-import { fetchTmdbDiscovery, searchTmdbMovies, type TmdbSort } from "@/lib/tmdb";
+import { fetchTmdbDiscovery, searchTmdbMovies, type TmdbSort } from "@/lib/api/tmdb";
 import type { MediaPage } from "@/lib/media-types";
 
 export async function searchMovies(query: string, page = 1): Promise<MediaPage> {

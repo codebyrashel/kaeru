@@ -3,7 +3,7 @@
 import { prisma } from "database";
 import type { LibraryStatus } from "database";
 import { revalidatePath } from "next/cache";
-import { requireUserId } from "@/lib/session";
+import { requireUserId } from "@/lib/auth/session";
 
 export async function updateProgress(
   libraryEntryId: number,

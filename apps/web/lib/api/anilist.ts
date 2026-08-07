@@ -1,6 +1,6 @@
-import type { NormalizedMedia, MediaPage } from "./media-types";
+import type { NormalizedMedia, MediaPage } from "../media-types";
 
-export type { NormalizedMedia, MediaPage } from "./media-types";
+export type { NormalizedMedia, MediaPage } from "../media-types";
 
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
 

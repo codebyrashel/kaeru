@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Plus, Check, Star } from "lucide-react";
 import { CATEGORY_STYLES } from "@/lib/media-style";
-import { CoverImage } from "@/components/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import type { MediaType } from "database";
 import type { NormalizedMedia } from "@/lib/media-types";
 

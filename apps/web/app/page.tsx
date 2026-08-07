@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Library, Layers, Flame, MoonStar, Tv, BookOpen, Book, Film } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "database";
-import { fetchAniListMedia } from "@/lib/anilist";
+import { fetchAniListMedia } from "@/lib/api/anilist";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default async function LandingPage() {

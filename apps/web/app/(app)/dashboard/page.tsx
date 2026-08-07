@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { getUserLibrary } from "@/lib/library";
-import { DashboardLibrary } from "@/components/dashboard-library";
+import { DashboardLibrary } from "@/components/library/dashboard-library";
 import Link from "next/link";
 
 export default async function Home() {

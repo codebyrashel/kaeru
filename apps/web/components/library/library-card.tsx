@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CATEGORY_STYLES, STATUS_STYLES } from "@/lib/media-style";
 import { progressPercent } from "@/lib/progress";
-import { CoverImage } from "@/components/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import type { LibraryEntry, Media, MediaType, LibraryStatus } from "database";
-import { RemoveFromLibraryButton } from "@/components/remove-from-library-button";
+import { RemoveFromLibraryButton } from "@/components/library/remove-from-library-button";
 
 type EntryWithMedia = LibraryEntry & { media: Media };
 

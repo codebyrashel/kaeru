@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Search, Loader2 } from "lucide-react";
-import { DiscoveryCard } from "@/components/discovery-card";
+import { DiscoveryCard } from "@/components/discovery/discovery-card";
 import { getDiscoveryMedia, searchMedia, addToLibrary } from "@/app/actions/media";
 import { getMovieDiscovery, searchMovies } from "@/app/actions/movies";
 import type { NormalizedMedia } from "@/lib/media-types";
-import type { AniListSort } from "@/lib/anilist";
-import type { TmdbSort } from "@/lib/tmdb";
+import type { AniListSort } from "@/lib/api/anilist";
+import type { TmdbSort } from "@/lib/api/tmdb";
 import type { MediaType } from "database";
 
 export interface SortOption {

@@ -2,7 +2,7 @@
 
 import { prisma } from "database";
 import { revalidatePath } from "next/cache";
-import { requireUserId } from "@/lib/session";
+import { requireUserId } from "@/lib/auth/session";
 
 export async function removeFromLibrary(libraryEntryId: number) {
   const userId = await requireUserId();

@@ -1,4 +1,4 @@
-import type { NormalizedMedia, MediaPage } from "./media-types";
+import type { NormalizedMedia, MediaPage } from "../media-types";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
