@@ -1,5 +1,4 @@
 import { prisma } from "database";
-import { DEMO_USER_ID } from "./demo-user";
 import type { MediaType } from "database";
 
 export interface LibraryStats {
@@ -11,9 +10,9 @@ export interface LibraryStats {
   topGenres: { genre: string; count: number }[];
 }
 
-export async function getLibraryStats(): Promise<LibraryStats> {
+export async function getLibraryStats(userId: string): Promise<LibraryStats> {
   const entries = await prisma.libraryEntry.findMany({
-    where: { userId: DEMO_USER_ID },
+    where: { userId },
     select: {
       currentEpisode: true,
       currentChapter: true,
@@ -65,9 +64,6 @@ export interface ActivityDay {
   level: 0 | 1 | 2 | 3 | 4;
 }
 
-// Always derive date keys from LOCAL date parts, never toISOString()
-// (which is UTC) — mixing the two caused today's activity to sometimes
-// not appear for timezones ahead of UTC.
 function dateKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -75,12 +71,12 @@ function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export async function getActivity(year = new Date().getFullYear()): Promise<ActivityDay[]> {
+export async function getActivity(userId: string, year = new Date().getFullYear()): Promise<ActivityDay[]> {
   const start = new Date(year, 0, 1, 0, 0, 0, 0);
   const end = new Date(year, 11, 31, 23, 59, 59, 999);
 
   const logs = await prisma.progressLog.findMany({
-    where: { userId: DEMO_USER_ID, loggedAt: { gte: start, lte: end } },
+    where: { userId, loggedAt: { gte: start, lte: end } },
     select: { loggedAt: true },
   });
 

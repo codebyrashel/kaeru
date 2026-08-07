@@ -5,7 +5,7 @@ import type { MediaType } from "database";
 import { fetchAniListMedia, type AniListSort } from "@/lib/anilist";
 import type { MediaPage, NormalizedMedia } from "@/lib/media-types";
 import { CATEGORY_TO_ANILIST } from "@/lib/media-category";
-import { DEMO_USER_ID } from "@/lib/demo-user";
+import { requireUserId } from "@/lib/session";
 
 export async function searchMedia(
   query: string,
@@ -27,6 +27,7 @@ export async function getDiscoveryMedia(
 }
 
 export async function addToLibrary(category: MediaType, result: NormalizedMedia) {
+  const userId = await requireUserId();
   const externalSource = category === "MOVIE" ? "TMDB" : "ANILIST";
 
   const media = await prisma.media.upsert({
@@ -48,9 +49,9 @@ export async function addToLibrary(category: MediaType, result: NormalizedMedia)
   });
 
   await prisma.libraryEntry.upsert({
-    where: { userId_mediaId: { userId: DEMO_USER_ID, mediaId: media.id } },
+    where: { userId_mediaId: { userId, mediaId: media.id } },
     update: {},
-    create: { userId: DEMO_USER_ID, mediaId: media.id },
+    create: { userId, mediaId: media.id },
   });
 
   return media;

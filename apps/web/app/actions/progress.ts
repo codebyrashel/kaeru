@@ -3,15 +3,17 @@
 import { prisma } from "database";
 import type { LibraryStatus } from "database";
 import { revalidatePath } from "next/cache";
-import { DEMO_USER_ID } from "@/lib/demo-user";
+import { requireUserId } from "@/lib/session";
 
 export async function updateProgress(
   libraryEntryId: number,
   newValue: number,
   field: "currentEpisode" | "currentChapter",
 ) {
+  const userId = await requireUserId();
+
   const entry = await prisma.libraryEntry.findFirstOrThrow({
-    where: { id: libraryEntryId, userId: DEMO_USER_ID },
+    where: { id: libraryEntryId, userId },
     include: { media: true },
   });
 
@@ -48,29 +50,34 @@ export async function updateProgress(
     });
 
     await tx.progressLog.create({
-      data: { userId: DEMO_USER_ID, libraryEntryId, delta },
+      data: { userId, libraryEntryId, delta },
     });
 
     return result;
   });
 
-  revalidatePath(`/title/${entry.mediaId}`);
-  revalidatePath("/");
+  const sourceSlug = entry.media.externalSource === "ANILIST" ? "anilist" : "tmdb";
+  revalidatePath(`/title/${sourceSlug}/${entry.media.externalId}`);
+  revalidatePath("/dashboard");
 
   return updated;
 }
 
 export async function updateStatus(libraryEntryId: number, status: LibraryStatus) {
+  const userId = await requireUserId();
+
   const entry = await prisma.libraryEntry.update({
-    where: { id: libraryEntryId, userId: DEMO_USER_ID },
+    where: { id: libraryEntryId, userId },
     data: {
       status,
       ...(status === "COMPLETED" && { completedAt: new Date() }),
     },
+    include: { media: true },
   });
 
-  revalidatePath(`/title/${entry.mediaId}`);
-  revalidatePath("/");
+  const sourceSlug = entry.media.externalSource === "ANILIST" ? "anilist" : "tmdb";
+  revalidatePath(`/title/${sourceSlug}/${entry.media.externalId}`);
+  revalidatePath("/dashboard");
 
   return entry;
 }

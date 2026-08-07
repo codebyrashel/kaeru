@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import {
   Home,
   Tv,
@@ -11,12 +12,13 @@ import {
   Library,
   Film,
   User,
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", label: "For you", icon: Home },
+  { href: "/dashboard", label: "For you", icon: Home },
   { href: "/anime", label: "Anime", icon: Tv },
   { href: "/manga", label: "Manga", icon: BookOpen },
   { href: "/manhwa", label: "Manhwa", icon: Book },
@@ -28,15 +30,11 @@ const STORAGE_KEY = "kaeru-sidebar-expanded";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [expanded, setExpanded] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    // Reading localStorage to sync initial UI state with a value that
-    // doesn't exist during SSR — this is exactly the "read from an
-    // external system on mount" case the lint rule's own docs call out
-    // as legitimate, not the "derived state" anti-pattern it usually
-    // catches. Intentional.
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -58,7 +56,7 @@ export function Sidebar() {
       } ${hydrated ? "" : "invisible"}`}
     >
       <div className="flex h-14 items-center gap-2 px-3.5">
-        <Link href="/" className="flex shrink-0 items-center gap-2 overflow-hidden">
+        <Link href="/dashboard" className="flex shrink-0 items-center gap-2 overflow-hidden">
           <span className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-[7px] bg-brand text-on-brand">
             <Library size={15} />
           </span>
@@ -86,6 +84,10 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto flex flex-col gap-0.5 border-t border-border px-2.5 py-2.5">
+        {expanded && session?.user?.email && (
+          <p className="truncate px-2.5 pb-1 text-[11px] text-text-muted">{session.user.email}</p>
+        )}
+
         <Link
           href="/me"
           title={expanded ? undefined : "Me"}
@@ -96,6 +98,15 @@ export function Sidebar() {
           <User size={16} className="shrink-0" />
           {expanded && <span className="whitespace-nowrap">Me</span>}
         </Link>
+
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          title={expanded ? undefined : "Sign out"}
+          className="flex items-center gap-2.5 rounded px-2.5 py-2 text-[13px] text-text-secondary transition-colors hover:bg-surface-2"
+        >
+          <LogOut size={16} className="shrink-0" />
+          {expanded && <span className="whitespace-nowrap">Sign out</span>}
+        </button>
 
         <button
           onClick={toggle}

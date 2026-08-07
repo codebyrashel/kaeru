@@ -1,5 +1,5 @@
+import { auth } from "@/auth";
 import { prisma } from "database";
-import { DEMO_USER_ID } from "@/lib/demo-user";
 import { getLibraryStats, getActivity, computeStreak } from "@/lib/stats";
 import { StatCard } from "@/components/stat-card";
 import { TimeSplitDonut } from "@/components/time-split-donut";
@@ -7,12 +7,14 @@ import { GenreBars } from "@/components/genre-bars";
 import { ActivityHeatmap } from "@/components/activity-heatmap";
 
 export default async function MePage() {
+  const session = await auth();
+  const userId = session!.user.id;
   const year = new Date().getFullYear();
 
   const [user, stats, activity] = await Promise.all([
-    prisma.user.findUniqueOrThrow({ where: { id: DEMO_USER_ID } }),
-    getLibraryStats(),
-    getActivity(year),
+    prisma.user.findUniqueOrThrow({ where: { id: userId } }),
+    getLibraryStats(userId),
+    getActivity(userId, year),
   ]);
 
   const streak = computeStreak(activity);
@@ -24,15 +26,10 @@ export default async function MePage() {
           {(user.name ?? user.email).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1">
-          <p className="text-[15px] font-medium text-text-primary">
-            {user.name ?? user.email}
-          </p>
+          <p className="text-[15px] font-medium text-text-primary">{user.name ?? user.email}</p>
           <p className="mt-0.5 text-xs text-text-secondary">
             Tracking since{" "}
-            {user.createdAt.toLocaleDateString(undefined, {
-              month: "short",
-              year: "numeric",
-            })}
+            {user.createdAt.toLocaleDateString(undefined, { month: "short", year: "numeric" })}
           </p>
         </div>
         {streak > 0 && (

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { CATEGORY_SLUGS, SLUG_TO_MEDIA_TYPE, type CategorySlug } from "@/lib/category-routes";
 import { DiscoveryGrid, type SortOption } from "@/components/discovery-grid";
 import { getLibraryExternalIds } from "@/lib/library";
@@ -37,6 +38,8 @@ export default async function DiscoveryPage({
 
   const slug = category as CategorySlug;
   const mediaType: MediaType = SLUG_TO_MEDIA_TYPE[slug];
+  const session = await auth();
+  const userId = session!.user.id;
 
   if (mediaType === "MOVIE") {
     let movieData: { initialResults: NormalizedMedia[]; hasNextPage: boolean; addedIds: Set<string> } | null = null;
@@ -44,7 +47,7 @@ export default async function DiscoveryPage({
     try {
       const [page, addedIds] = await Promise.all([
         fetchTmdbDiscovery("trending", 1),
-        getLibraryExternalIds("MOVIE"),
+        getLibraryExternalIds(userId, "MOVIE"),
       ]);
       movieData = { initialResults: page.results, hasNextPage: page.hasNextPage, addedIds };
     } catch {
@@ -76,7 +79,7 @@ export default async function DiscoveryPage({
   const { type, country } = CATEGORY_TO_ANILIST[mediaType];
   const [page, addedIds] = await Promise.all([
     fetchAniListMedia({ type, countryOfOrigin: country, sort: "TRENDING_DESC", page: 1 }),
-    getLibraryExternalIds(mediaType),
+    getLibraryExternalIds(userId, mediaType),
   ]);
 
   return (

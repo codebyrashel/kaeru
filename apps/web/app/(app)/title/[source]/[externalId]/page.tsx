@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { getLibraryEntryByExternalId } from "@/lib/library";
 import { fetchAniListMediaById } from "@/lib/anilist";
 import { fetchTmdbMovieById } from "@/lib/tmdb";
@@ -8,9 +9,9 @@ import { StatusSelector } from "@/components/status-selector";
 import { ProgressStepper } from "@/components/progress-stepper";
 import { CoverImage } from "@/components/cover-image";
 import { AddToLibraryButton } from "@/components/add-to-library-button";
+import { RemoveLinkButton } from "@/components/remove-link-button";
 import type { NormalizedMedia } from "@/lib/media-types";
 import type { MediaType } from "database";
-import { RemoveLinkButton } from "@/components/remove-link-button";
 
 export default async function TitleDetailPage({
   params,
@@ -20,7 +21,10 @@ export default async function TitleDetailPage({
   const { source, externalId } = await params;
   if (source !== "anilist" && source !== "tmdb") notFound();
 
-  const owned = await getLibraryEntryByExternalId(source === "anilist" ? "ANILIST" : "TMDB", externalId);
+  const session = await auth();
+  const userId = session!.user.id;
+
+  const owned = await getLibraryEntryByExternalId(userId, source === "anilist" ? "ANILIST" : "TMDB", externalId);
 
   if (owned) {
     const { media } = owned;
