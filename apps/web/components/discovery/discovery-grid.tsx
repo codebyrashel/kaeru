@@ -9,6 +9,7 @@ import type { NormalizedMedia } from "@/lib/media-types";
 import type { AniListSort } from "@/lib/api/anilist";
 import type { TmdbSort } from "@/lib/api/tmdb";
 import type { MediaType } from "database";
+import { FilterSheet } from "@/components/shared/filter-sheet";
 
 export interface SortOption {
   value: string;
@@ -159,7 +160,7 @@ export function DiscoveryGrid({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 flex flex-col gap-2 bg-surface-0 px-6 pb-3 pt-5">
+      <div className="sticky top-0 z-10 flex flex-col gap-2 bg-surface-0 px-4 pb-3 pt-4 sm:px-6 sm:pt-5">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <div className="flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-surface-1 px-3">
             <Search size={14} className="text-text-muted" />
@@ -171,8 +172,9 @@ export function DiscoveryGrid({
             />
             {isPending && <Loader2 size={13} className="animate-spin text-text-muted" />}
           </div>
+
           {!query.trim() && (
-            <div className="flex gap-1">
+            <div className="hidden gap-1 sm:flex">
               {sortOptions.map((s) => (
                 <button
                   key={s.value}
@@ -187,10 +189,58 @@ export function DiscoveryGrid({
               ))}
             </div>
           )}
+
+          <FilterSheet label="Filters" activeCount={genre !== "ALL" ? 1 : 0}>
+            {!query.trim() && (
+              <div>
+                <p className="mb-2 text-xs text-text-muted">Sort by</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {sortOptions.map((s) => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setSort(s.value)}
+                      className={`whitespace-nowrap rounded px-3 py-1.5 text-xs ${
+                        sort === s.value ? "bg-surface-2 text-text-primary" : "text-text-secondary hover:bg-surface-1"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {availableGenres.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs text-text-muted">Genre</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => setGenre("ALL")}
+                    className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
+                      genre === "ALL" ? "bg-surface-2 text-text-primary" : "text-text-muted hover:bg-surface-1"
+                    }`}
+                  >
+                    All genres
+                  </button>
+                  {availableGenres.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setGenre(g)}
+                      className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs transition-colors ${
+                        genre === g ? "bg-surface-2 text-text-primary" : "text-text-muted hover:bg-surface-1"
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </FilterSheet>
         </form>
 
         {availableGenres.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <div className="hidden gap-1.5 overflow-x-auto pb-1 sm:flex">
             <button
               onClick={() => setGenre("ALL")}
               className={`shrink-0 rounded-full px-3 py-1 text-[11px] transition-colors ${
@@ -214,7 +264,7 @@ export function DiscoveryGrid({
         )}
       </div>
 
-      <div className="px-6 pb-5">
+      <div className="px-4 pb-5 sm:px-6">
         {error && <p className="mb-3 text-sm text-danger-text">{error}</p>}
 
         {isPending && results.length === 0 ? (
@@ -223,7 +273,7 @@ export function DiscoveryGrid({
           <p className="text-sm text-text-muted">No matches found.</p>
         ) : (
           <>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-2.5">
               {visibleResults.map((result) => (
                 <DiscoveryCard
                   key={result.externalId}
