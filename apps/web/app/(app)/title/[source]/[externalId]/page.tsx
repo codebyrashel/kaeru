@@ -45,6 +45,7 @@ export default async function TitleDetailPage({
                 src={media.coverImageUrl}
                 alt={media.title}
                 className="absolute inset-0 h-full w-full object-cover"
+                sizes="160px"
               />
             )}
           </div>
