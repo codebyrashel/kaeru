@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "database";
 import { fetchAniListMedia } from "@/lib/api/anilist";
 import { AuroraBackground } from "@/components/ui/aurora-background";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site-config";
 
 export default async function LandingPage() {
   const session = await auth();
@@ -32,6 +33,25 @@ export default async function LandingPage() {
 
   return (
     <div className="relative bg-surface-0 overflow-x-hidden w-full min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: SITE_NAME,
+            url: SITE_URL,
+            description: SITE_DESCRIPTION,
+            applicationCategory: "EntertainmentApplication",
+            operatingSystem: "Web",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }),
+        }}
+      />
       {/* Aurora background — sits behind header + hero */}
       <AuroraBackground
         showRadialGradient

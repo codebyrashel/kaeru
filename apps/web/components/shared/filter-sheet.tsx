@@ -18,7 +18,7 @@ export function FilterSheet({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-9 shrink-0 items-center gap-1.5 rounded-[8px] border border-border bg-surface-1 px-3 text-[13px] text-text-secondary sm:hidden"
+        className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface-1 px-3 text-[13px] text-text-secondary sm:hidden"
       >
         <SlidersHorizontal size={14} />
         {label}
